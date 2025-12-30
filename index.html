@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Carta Especial</title>
+    <style>
+        /* PEGA AQUÍ TODO TU CSS */
+        :root { --rosa-sobre: #f192a5; --rosa-frontal: #f4aab9; --fondo: #fce4ec; }
+        body { background-color: var(--fondo); margin: 0; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; font-family: 'Arial', sans-serif; }
+        .main-scene { display: flex; align-items: center; gap: 30px; z-index: 10; }
+        .purin-btn { width: 90px; cursor: pointer; text-align: center; transition: 0.3s; }
+        .purin-btn img { width: 100%; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+        .purin-btn span { display: block; font-weight: bold; color: #855e42; font-size: 13px; }
+        .envelope-wrapper { position: relative; width: 300px; height: 200px; cursor: pointer; }
+        .flap { position: absolute; top: 0; left: 0; border-left: 150px solid transparent; border-right: 150px solid transparent; border-top: 100px solid var(--rosa-sobre); transform-origin: top; z-index: 6; transition: transform 0.5s ease 0.5s, z-index 0s 0.5s; }
+        .envelope-wrapper.open .flap { transform: rotateX(180deg); z-index: 1; transition: transform 0.5s ease, z-index 0s 0.2s; }
+        .letter { position: absolute; bottom: 0; left: 10px; width: 280px; height: 180px; background: white; z-index: 3; padding: 20px; box-sizing: border-box; text-align: center; transition: transform 0.5s ease; }
+        .envelope-wrapper.open .letter { transform: translateY(-110px); transition: transform 0.5s ease 0.5s; }
+        .envelope-back { position: absolute; width: 100%; height: 100%; background: var(--rosa-sobre); z-index: 2; }
+        .envelope-front { position: absolute; width: 100%; height: 100%; z-index: 4; pointer-events: none; }
+        .envelope-front::before, .envelope-front::after { content: ""; position: absolute; bottom: 0; border-top: 100px solid transparent; border-bottom: 100px solid var(--rosa-frontal); }
+        .envelope-front::before { left: 0; border-left: 150px solid var(--rosa-frontal); border-right: 150px solid transparent; }
+        .envelope-front::after { right: 0; border-right: 150px solid var(--rosa-frontal); border-left: 150px solid transparent; }
+        .heart { position: absolute; top: 90px; left: 140px; width: 20px; height: 20px; background: #d63031; z-index: 7; transform: rotate(45deg); transition: 0.3s 0.8s; }
+        .heart::before, .heart::after { content: ""; position: absolute; width: 20px; height: 20px; background: #d63031; border-radius: 50%; }
+        .heart::before { top: -10px; left: 0; }
+        .heart::after { left: -10px; top: 0; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(252, 228, 236, 0.98); z-index: 1000; justify-content: center; align-items: center; }
+        .collage-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .collage-grid img { width: 180px; height: 180px; object-fit: cover; border: 5px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .petal { position: absolute; background-color: #ffcdd2; border-radius: 150% 0 150% 0; z-index: 1; pointer-events: none; animation: fall linear forwards; }
+        @keyframes fall { 0% { top: -10%; transform: rotate(0deg); opacity: 0; } 10% { opacity: 1; } 100% { top: 110%; transform: rotate(360deg); opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <div id="petals-container"></div>
+    <div class="main-scene">
+        <div class="purin-btn" onclick="showCollage(1)">
+            <img src="https://i.pinimg.com/originals/f3/80/7e/f3807e3706093554e7d7047805164f0f.png">
+            <span>Fotos 1</span>
+        </div>
+        <div class="envelope-wrapper" id="envelope">
+            <div class="flap"></div>
+            <div class="envelope-back"></div>
+            <div class="letter">
+                <div class="text">
+                    <strong>¡Para ti! ✨</strong>
+                    <p>Mira las fotos en los Pompompurin.</p>
+                </div>
+            </div>
+            <div class="envelope-front"></div>
+            <div class="heart"></div>
+        </div>
+        <div class="purin-btn" onclick="showCollage(2)">
+            <img src="https://i.pinimg.com/originals/a0/62/9b/a0629b38023537e237373f1f1d182512.png">
+            <span>Fotos 2</span>
+        </div>
+    </div>
+
+    <div id="collage-modal" class="modal" onclick="closeCollage()">
+        <div class="collage-grid" id="collage-content"></div>
+    </div>
+
+    <audio id="musica" loop>
+        <source src="TU_LINK_DE_DROPBOX_AQUI&raw=1" type="audio/mpeg">
+    </audio>
+
+    <script>
+        /* PEGA AQUÍ TODO TU JAVASCRIPT */
+        const envelope = document.getElementById('envelope');
+        const musica = document.getElementById('musica');
+        const container = document.getElementById('petals-container');
+        const modal = document.getElementById('collage-modal');
+        const collageContent = document.getElementById('collage-content');
+
+        const fotos1 = ["URL_FOTO_1", "URL_FOTO_2", "URL_FOTO_3", "URL_FOTO_4"];
+        const fotos2 = ["URL_FOTO_5", "URL_FOTO_6", "URL_FOTO_7", "URL_FOTO_8"];
+
+        envelope.onclick = function() {
+            this.classList.toggle('open');
+            if (this.classList.contains('open')) {
+                musica.play().catch(() => {});
+                startPetals();
+            } else {
+                musica.pause();
+                musica.currentTime = 0;
+                stopPetals();
+            }
+        };
+
+        function showCollage(n) {
+            const fotos = n === 1 ? fotos1 : fotos2;
+            collageContent.innerHTML = '';
+            fotos.forEach(url => {
+                const img = document.createElement('img');
+                img.src = url;
+                collageContent.appendChild(img);
+            });
+            modal.style.display = 'flex';
+        }
+        function closeCollage() { modal.style.display = 'none'; }
+
+        let pInterval;
+        function startPetals() {
+            pInterval = setInterval(() => {
+                const p = document.createElement('div');
+                p.className = 'petal';
+                p.style.width = p.style.height = Math.random() * 15 + 10 + 'px';
+                p.style.left = Math.random() * 100 + 'vw';
+                p.style.animationDuration = Math.random() * 3 + 3 + 's';
+                container.appendChild(p);
+                setTimeout(() => p.remove(), 6000);
+            }, 300);
+        }
+        function stopPetals() { clearInterval(pInterval); container.innerHTML = ''; }
+    </script>
+</body>
+</html>
